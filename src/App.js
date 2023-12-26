@@ -9,7 +9,7 @@ const App=()=>{
   const [images, setImages] = useState([]);
   return (
     <div>
-        <ImageSearch setImages={setImages} />
+        <ImageSearch setImages={setImages} images={images} />
         <ImageList images={images} />
     </div>
   );

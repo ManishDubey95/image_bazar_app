@@ -1,42 +1,56 @@
-import React, { useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const ImageSearch = ({setImages}) => {
-  
+// useEfect( function fun(), arr[variable] )
+// function() => what ever you want to execute after change in variable
+
+
+const ImageSearch = ({ images, setImages }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+
+
+  // useEffect(()=>{fetchImages(null, "random")}, [])
   
+  useEffect(()=>{setPage(1)}, [searchTerm]) // whenever, I clicked search, the "page value will become "1" again
 
-  // implementing "useEffect" so that initially the page will not be blank and show some random images
-  useEffect(() => {
-    fetchImages(null, "random")
-  },[])
-
-
-  // todo:  remove access key from here and put it in .env file
-  async function fetchImages(e, initialSearch) {
-    //                       e => null,    initialSearch => "random"
-    if(e) {
-      e.preventDefault()
+  
+  async function fetchImages(e, flag) {
+    //                       e => null,    flag => ""
+    if (e) {
+      e.preventDefault();
     }
-    
+
     try {
-      const response = await axios.get("https://api.unsplash.com/search/photos", {
+      const response = await axios.get(
+        "https://api.unsplash.com/search/photos",
+        {
+          headers: {
+            "Accept-Version": "v1",
+            Authorization: `Client-ID ${process.env.REACT_APP_UNSPLASH_ACCESS_KEY}`,
+          },
 
-        headers: {
-          "Accept-Version": "v1",
-          "Authorization": `Client-ID ${process.env.REACT_APP_UNSPLASH_ACCESS_KEY}`
-        },
-
-        params: {
-          query: searchTerm || initialSearch,
+          params: {
+            query: searchTerm,
+            per_page: 5,
+            page: page,
+          },
         }
+      );
 
-      })
+      if (flag === "submit") {
+        // (i.e.), after clicking the "search" button
+        setImages(response.data.results);  // again load the page as per new search
+        // setPage(page + 1);
+      }
 
-      // console.log(response.data.results);
-      setImages(response.data.results);
+      else{  // next button will continueously adding the images
+        setImages([...images, ...response.data.results]);
+        // setPage(page + 1);
+      }
+      setPage(page + 1);
+      
     } 
-    
     catch (error) {
       console.log(error);
     }
@@ -44,8 +58,9 @@ const ImageSearch = ({setImages}) => {
 
   return (
     <div className="search">
-      <form onSubmit={fetchImages}>
-        <input
+      <form onSubmit={(e) => fetchImages(e, "submit")}>
+        {/* here we need to pass args (e, "submit") manually, so that it will follow the order of args */}
+        <input // e => text you type,    flag => "submit"
           type="text"
           placeholder="Enter search ..."
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -53,6 +68,7 @@ const ImageSearch = ({setImages}) => {
         />
         <button type="submit">Search</button>
       </form>
+      <button onClick={fetchImages}>Next..</button>
     </div>
   );
 };
